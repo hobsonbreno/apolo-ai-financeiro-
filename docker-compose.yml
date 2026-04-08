@@ -1,0 +1,73 @@
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      network: host
+    dns: 8.8.8.8
+    ports:
+      - "3005:3000"
+    environment:
+      - NODE_ENV=development
+      - MONGO_URL=mongodb://mongodb:27017/financeai
+      - PYTHON_URL=http://ai-engine:8000
+      - JWT_SECRET=your_jwt_secret_here
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    depends_on:
+      - mongodb
+      - ai-engine
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  ai-engine:
+    build:
+      context: ./ai-engine
+      dockerfile: Dockerfile
+      network: host
+    dns: 8.8.8.8
+    ports:
+      - "8005:8000"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    volumes:
+      - ./ai-engine:/app
+      - /app/venv # Avoid overwriting the venv if present
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      network: host
+    dns: 8.8.8.8
+    ports:
+      - "5175:5173"
+    depends_on:
+      - api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  whatsapp-agent:
+    build:
+      context: ./whatsapp-agent
+      dockerfile: Dockerfile
+      network: host
+    dns: 8.8.8.8
+    environment:
+      - API_URL=http://api:3000/financial
+    depends_on:
+      - api
+    volumes:
+      - ./whatsapp-agent/.wwebjs_auth:/app/.wwebjs_auth
+      - ./whatsapp-agent/.wwebjs_cache:/app/.wwebjs_cache
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27015:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

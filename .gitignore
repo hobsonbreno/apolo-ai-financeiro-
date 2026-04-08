@@ -1,0 +1,43 @@
+# Node.js
+node_modules/
+dist/
+build/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment Variables (SEGURANÇA CRÍTICA)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# WhatsApp Agent Persistence (Evita conflitos de sessão)
+whatsapp-agent/.wwebjs_auth/
+whatsapp-agent/.wwebjs_cache/
+whatsapp-agent/session-*.json
+**/SingletonLock**
+
+# Python (AI Engine)
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+.env
+
+# Docker & System
+mongo-data/
+*.log
+.DS_Store
+.antigravityignore
+.gemini/
+brain/
+tmp/
+
+# IDEs
+.vscode/
+.idea/
+.history/
