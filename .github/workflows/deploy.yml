@@ -1,0 +1,50 @@
+name: CI/CD Finance AI Build
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Backend (Static Analysis)
+        run: |
+          cd backend
+          npm install
+          npm run build
+
+      - name: Build Frontend (Production Ready Check)
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      - name: Docker Compose Check
+        run: docker compose config
+
+  # PASSO DE DEPLOY (SIMULADO)
+  # Este passo só rodará se você configurar segredos no GitHub Actions
+  # deployment:
+  #   needs: build-and-test
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+  #   steps:
+  #     - name: Deploy to VPS
+  #       uses: appleboy/ssh-action@master
+  #       with:
+  #         host: ${{ secrets.SSH_HOST }}
+  #         username: ${{ secrets.SSH_USER }}
+  #         key: ${{ secrets.SSH_KEY }}
+  #         script: |
+  #           cd ~/app
+  #           git pull origin master
+  #           ./start.sh
