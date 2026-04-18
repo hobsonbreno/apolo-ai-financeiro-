@@ -10,7 +10,7 @@ import Login from './Login';
 import InvestmentSimulator from './InvestmentSimulator';
 import './App.css';
 
-const API_BASE = 'http://localhost:3005/api/financial';
+const API_BASE = '/api/financial';
 
 const COLORS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -46,7 +46,7 @@ function App() {
 
   const handleUpdateProfile = async (data: any) => {
     try {
-      const response = await axios.patch(`http://localhost:3005/api/auth/profile/${user._id || user.id}`, 
+      const response = await axios.patch(`/api/auth/profile/${user._id || user.id}`, 
         data,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -248,7 +248,7 @@ function App() {
             <h3 className="mb-16">Conectar ao WhatsApp</h3>
             <p className="dim mb-32">Aponte a câmera do seu WhatsApp para o código QR abaixo.</p>
             <div className="qr-container bg-white p-12 rounded inline-block mb-32">
-              <img src="http://localhost:3005/api/financial/qr" alt="QR" style={{ width: 220, height: 220 }} />
+              <img src="/api/financial/qr" alt="QR" style={{ width: 220, height: 220 }} />
             </div>
             <div className="flex justify-center">
               <button className="btn-primary" onClick={() => setShowQRModal(false)}>Concluir</button>
