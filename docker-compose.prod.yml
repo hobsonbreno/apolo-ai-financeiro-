@@ -1,0 +1,107 @@
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: apolo-api-prod
+    restart: always
+    ports:
+      - "${BACKEND_PORT:-5001}:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGO_URL=${MONGO_URL}
+      - PYTHON_URL=${PYTHON_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    depends_on:
+      - mongodb
+      - ai-engine
+    networks:
+      - apolo-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+
+  ai-engine:
+    build:
+      context: ./ai-engine
+      dockerfile: Dockerfile
+    container_name: apolo-ai-engine-prod
+    restart: always
+    ports:
+      - "8005:8000"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    networks:
+      - apolo-network
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: apolo-frontend-prod
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-3001}:5173"
+    depends_on:
+      - api
+    networks:
+      - apolo-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+
+  whatsapp-agent:
+    build:
+      context: ./whatsapp-agent
+      dockerfile: Dockerfile
+    container_name: apolo-whatsapp-prod
+    restart: always
+    environment:
+      - API_URL=${API_URL}
+      - AI_URL=${AI_URL}
+      - OWNER_PHONE=${OWNER_PHONE}
+    depends_on:
+      - api
+    volumes:
+      - ./whatsapp-agent/.wwebjs_auth:/app/.wwebjs_auth
+      - ./whatsapp-agent/.wwebjs_cache:/app/.wwebjs_cache
+    networks:
+      - apolo-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+
+  mongodb:
+    image: mongo:latest
+    container_name: apolo-mongodb-prod
+    restart: always
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./data/db:/data/db
+    networks:
+      - apolo-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+
+networks:
+  apolo-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
