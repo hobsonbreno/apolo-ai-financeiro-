@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: apolo-financeiro
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: ghcr.io/hobsonbreno/apolo-ai-financeiro-frontend:latest
+        ports:
+        - containerPort: 5173
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: apolo-financeiro
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+  - port: 5173
+    targetPort: 5173
+    nodePort: 30051 # Exposto na porta 30051 do host

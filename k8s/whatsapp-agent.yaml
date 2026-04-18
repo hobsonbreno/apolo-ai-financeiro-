@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whatsapp-agent
+  namespace: apolo-financeiro
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whatsapp-agent
+  template:
+    metadata:
+      labels:
+        app: whatsapp-agent
+    spec:
+      containers:
+      - name: whatsapp-agent
+        image: ghcr.io/hobsonbreno/apolo-ai-financeiro-whatsapp-agent:latest
+        env:
+        - name: API_URL
+          value: "http://api:3000/financial"
+        - name: AI_URL
+          value: "http://ai-engine:8000"
+        volumeMounts:
+        - name: wwebjs-auth
+          mountPath: /app/.wwebjs_auth
+        - name: wwebjs-cache
+          mountPath: /app/.wwebjs_cache
+      volumes:
+      - name: wwebjs-auth
+        hostPath:
+          path: /home/hobson007breno/data/apolo-whatsapp/auth
+          type: DirectoryOrCreate
+      - name: wwebjs-cache
+        hostPath:
+          path: /home/hobson007breno/data/apolo-whatsapp/cache
+          type: DirectoryOrCreate

@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: apolo-financeiro
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - name: api
+        image: ghcr.io/hobsonbreno/apolo-ai-financeiro-backend:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: MONGO_URL
+          value: "mongodb://mongodb:27017/financeai"
+        - name: PYTHON_URL
+          value: "http://ai-engine:8000"
+        - name: OPENROUTER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: apolo-secrets
+              key: openrouter-key
+        - name: JWT_SECRET
+          value: "apollo_secret_k8s"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: apolo-financeiro
+spec:
+  type: NodePort
+  selector:
+    app: api
+  ports:
+  - port: 3000
+    targetPort: 3000
+    nodePort: 30005 # Exposto na porta 30005 do host
