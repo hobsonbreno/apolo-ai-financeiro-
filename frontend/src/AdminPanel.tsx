@@ -9,10 +9,27 @@ import {
 
 const ADMIN_API = 'http://localhost:3005/api/admin';
 
+interface User {
+  phone: string;
+  name?: string;
+  email?: string;
+  cpf?: string;
+  status: string;
+  plan: string;
+  expiry?: string;
+}
+
+interface Stats {
+  totalUsers: number;
+  activeSubs: number;
+  globalVolume: number;
+  conversionRate: number;
+}
+
 function AdminPanel() {
-  const [users, setUsers] = useState([]);
-  const [subProjection, setSubProjection] = useState([]);
-  const [stats, setStats] = useState({ totalUsers: 0, activeSubs: 0, globalVolume: 0, conversionRate: 0 });
+  const [users, setUsers] = useState<User[]>([]);
+  const [subProjection, setSubProjection] = useState<any[]>([]);
+  const [stats, setStats] = useState<Stats>({ totalUsers: 0, activeSubs: 0, globalVolume: 0, conversionRate: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

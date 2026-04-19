@@ -14,18 +14,26 @@ const API_BASE = '/api/financial';
 
 const COLORS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
+interface TransactionFormData {
+  description: string;
+  amount: string;
+  installments: string;
+  date: string;
+  categoryName: string;
+}
+
 function App() {
   const [user, setUser] = useState<any>(JSON.parse(localStorage.getItem('user') || 'null'));
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [view, setView] = useState('user'); // 'user' or 'admin'
   const [summary, setSummary] = useState({ totalExpenses: 0, totalIncome: 0, balance: 0 });
-  const [expenses, setExpenses] = useState([]);
-  const [incomes, setIncomes] = useState([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [incomes, setIncomes] = useState<any[]>([]);
   const [projection, setProjection] = useState<any[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'expense' | 'income'>('expense');
-  const [formData, setFormData] = useState({ description: '', amount: '', installments: '1', date: new Date().toISOString().split('T')[0], categoryName: 'Alimentação' });
+  const [formData, setFormData] = useState<TransactionFormData>({ description: '', amount: '', installments: '1', date: new Date().toISOString().split('T')[0], categoryName: 'Alimentação' });
   const [showQRModal, setShowQRModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -197,14 +205,14 @@ function App() {
 
   // Process data for charts
   const categoryData = expenses.reduce((acc, curr) => {
-    const existing = acc.find(item => item.name === curr.categoryName);
+    const existing = acc.find((item: any) => item.name === curr.categoryName);
     if (existing) {
       existing.value += curr.amount;
     } else {
       acc.push({ name: curr.categoryName || 'Outros', value: curr.amount });
     }
     return acc;
-  }, []);
+  }, [] as any[]);
 
   if (loading) {
     return (
