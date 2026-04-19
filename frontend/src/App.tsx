@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid
+  PieChart, Pie, Cell, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { Wallet, TrendingUp, TrendingDown, AlertCircle, PlusCircle, Settings, Activity } from 'lucide-react';
 import axios from 'axios';
@@ -598,7 +598,7 @@ function App() {
                   <ResponsiveContainer width="100%" height={250}>
                     <BarChart
                       data={projection}
-                      onClick={(data) => data && setSelectedMonth(data.activeTooltipIndex)}
+                      onClick={(data) => data && setSelectedMonth(data.activeTooltipIndex ?? null)}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
                       <XAxis dataKey="month" stroke="#94a3b8" />

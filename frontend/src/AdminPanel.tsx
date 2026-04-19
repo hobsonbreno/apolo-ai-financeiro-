@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   Users, CreditCard, Activity, Trash2, XCircle, Calendar, UserPlus
 } from 'lucide-react';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 
 const ADMIN_API = 'http://localhost:3005/api/admin';
@@ -30,7 +30,6 @@ function AdminPanel() {
   const [users, setUsers] = useState<User[]>([]);
   const [subProjection, setSubProjection] = useState<any[]>([]);
   const [stats, setStats] = useState<Stats>({ totalUsers: 0, activeSubs: 0, globalVolume: 0, conversionRate: 0 });
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAdminData();
@@ -50,8 +49,6 @@ function AdminPanel() {
       setSubProjection(projectionRes.data);
     } catch (error) {
       console.error("Admin Access Denied or Error", error);
-    } finally {
-      setLoading(false);
     }
   };
 
