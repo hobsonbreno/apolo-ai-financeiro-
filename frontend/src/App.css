@@ -812,3 +812,53 @@ body {
 .btn-action.info:hover { background: #6366f1; color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
 
 
+
+/* New UI Elements */
+.icon-btn-sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(30, 41, 59, 0.6);
+  color: #94a3b8;
+}
+
+.icon-btn-sm.blue:hover { background: rgba(99, 102, 241, 0.2); color: #818cf8; border-color: rgba(99, 102, 241, 0.3); }
+.icon-btn-sm.red:hover { background: rgba(239, 68, 68, 0.2); color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
+
+.badge-small {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.type-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.type-dot.expense { background-color: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+.type-dot.income { background-color: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+
+.fw-500 { font-weight: 500; }
+.fw-600 { font-weight: 600; }
+.fs-10 { font-size: 10px; }
+.fs-14 { font-size: 14px; }
+.anim-slide-up { animation: slideUp 0.3s ease-out; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

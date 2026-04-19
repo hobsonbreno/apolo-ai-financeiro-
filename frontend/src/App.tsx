@@ -3,7 +3,7 @@ import {
   PieChart, Pie, Cell, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { Wallet, TrendingUp, TrendingDown, AlertCircle, PlusCircle, Settings, Activity } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, AlertCircle, PlusCircle, Settings, Activity, Trash2, Edit2, Info } from 'lucide-react';
 import axios from 'axios';
 import AdminPanel from './AdminPanel';
 import Login from './Login';
@@ -40,6 +40,42 @@ function App() {
   const [profileUrl, setProfileUrl] = useState(user?.avatarUrl || '');
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [qrVersion, setQrVersion] = useState(Date.now());
+  const [editingTransaction, setEditingTransaction] = useState<any>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedTx, setSelectedTx] = useState<any>(null);
+
+  const handleEditTransaction = (tx: any) => {
+    setEditingTransaction(tx);
+    setFormData({
+      description: tx.description.split(' (')[0], 
+      amount: tx.amount.toString(),
+      installments: tx.installments.toString(),
+      date: new Date(tx.date).toISOString().split('T')[0],
+      categoryName: tx.categoryName || 'Outros'
+    });
+    setModalType(tx.type);
+    setIsCustomCategory(false);
+    setShowModal(true);
+  };
+
+  const handleDeleteClick = (tx: any) => {
+    setSelectedTx(tx);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async (allInstallments: boolean) => {
+    if (!selectedTx) return;
+    try {
+      const endpoint = selectedTx.type === 'income' ? 'income' : 'expenses';
+      await axios.delete(`${API_BASE}/${endpoint}/${selectedTx._id}?allInstallments=${allInstallments}`);
+      fetchSummary();
+      setShowDeleteConfirm(false);
+      setSelectedTx(null);
+    } catch (error) {
+      console.error('Erro ao excluir:', error);
+      alert('Falha ao excluir. Tente novamente.');
+    }
+  };
 
   // Polling para atualizar o QR Code em tempo real quando o modal está aberto
   useEffect(() => {
@@ -185,13 +221,17 @@ function App() {
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const handleAddExpense = () => {
+    setEditingTransaction(null);
     setModalType('expense');
+    setFormData({ description: '', amount: '', installments: '1', date: new Date().toISOString().split('T')[0], categoryName: 'Alimentação' });
     setIsCustomCategory(false);
     setShowModal(true);
   };
 
   const handleAddIncome = () => {
+    setEditingTransaction(null);
     setModalType('income');
+    setFormData({ description: '', amount: '', installments: '1', date: new Date().toISOString().split('T')[0], categoryName: 'Salário' });
     setIsCustomCategory(false);
     setShowModal(true);
   };
@@ -207,14 +247,21 @@ function App() {
         phone: phone
       };
 
-      await axios.post(`${API_BASE}/${endpoint}`, payload);
+      if (editingTransaction) {
+        const updateAll = editingTransaction.installments > 1 ? window.confirm('Deseja atualizar todas as parcelas deste lançamento?') : false;
+        await axios.patch(`${API_BASE}/${endpoint}/${editingTransaction._id}?allInstallments=${updateAll}`, payload);
+      } else {
+        await axios.post(`${API_BASE}/${endpoint}`, payload);
+      }
+
       setShowModal(false);
+      setEditingTransaction(null);
       setFormData({ description: '', amount: '', installments: '1', date: new Date().toISOString().split('T')[0], categoryName: 'Salário' });
       fetchData();
-      alert('Lançamento registrado com sucesso!');
+      alert(editingTransaction ? 'Lançamento atualizado!' : 'Lançamento registrado!');
     } catch (err) {
-      console.error('Erro ao salvar:', err);
-      alert('Erro ao salvar lançamento. Verifique os dados.');
+      console.error("Error submitting modal", err);
+      alert('Erro ao salvar lançamento.');
     }
   };
 
@@ -349,7 +396,7 @@ function App() {
         {showModal && (
           <div className="modal-overlay">
             <div className="modal-content glass-premium anim-slide-up">
-              <h3 className="mb-16">Novo Lançamento ({modalType === 'expense' ? 'Despesa' : 'Receita'})</h3>
+              <h3 className="mb-16">{editingTransaction ? 'Editar' : 'Novo'} Lançamento ({modalType === 'expense' ? 'Despesa' : 'Receita'})</h3>
               <form onSubmit={handleModalSubmit}>
                 <div className="input-field mb-12">
                   <label className="dim fs-12 mb-4 block">Descrição</label>
@@ -445,10 +492,38 @@ function App() {
                   />
                 </div>
                 <div className="flex justify-end gap-12 mt-20">
-                  <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>
-                  <button type="submit" className="btn-primary">Registrar</button>
+                  <button type="button" className="btn-secondary" onClick={() => { setShowModal(false); setEditingTransaction(null); }}>Cancelar</button>
+                  <button type="submit" className="btn-primary">{editingTransaction ? 'Salvar Alterações' : 'Registrar'}</button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {showDeleteConfirm && (
+          <div className="modal-overlay">
+            <div className="modal-content glass-premium anim-slide-up" style={{ maxWidth: '400px', textAlign: 'center' }}>
+              <div className="icon-box red mb-16" style={{ margin: '0 auto 16px' }}>
+                <Trash2 size={32} />
+              </div>
+              <h3 className="mb-8">Confirmar Exclusão</h3>
+              <p className="dim mb-24">
+                Como deseja excluir o lançamento <strong>"{selectedTx?.description}"</strong>?
+              </p>
+              
+              <div className="flex flex-col gap-12">
+                <button className="btn-danger-large w-full" onClick={() => confirmDelete(false)}>
+                  Apagar apenas esta parcela
+                </button>
+                {selectedTx?.installments > 1 && (
+                  <button className="btn-secondary w-full" onClick={() => confirmDelete(true)} style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}>
+                    Apagar todas as parcelas
+                  </button>
+                )}
+                <button className="btn-ghost w-full" onClick={() => setShowDeleteConfirm(false)}>
+                  Cancelar
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -545,26 +620,50 @@ function App() {
                     <table className="admin-table mini-table">
                       <thead>
                         <tr>
-                          <th>ID</th>
                           <th>Data</th>
                           <th>Descrição</th>
                           <th>Valor</th>
                           <th>Parc.</th>
+                          <th style={{ textAlign: 'right' }}>Ações</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {allTransactions.slice(0, 8).map((tx: any, i: number) => (
-                          <tr key={i}>
-                            <td className="dim">#{tx._id?.slice(-4) || '---'}</td>
-                            <td>{new Date(tx.date).toLocaleDateString('pt-BR')}</td>
+                        {allTransactions.slice(0, 12).map((tx: any, i: number) => (
+                          <tr key={i} className="anim-fade-in" style={{ animationDelay: `${i * 0.05}s` }}>
+                            <td>{new Date(tx.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</td>
                             <td>
-                              <span className={`type-dot ${tx.type}`}></span>
-                              {tx.description}
+                              <div className="flex flex-col">
+                                <span className="fs-14 fw-500">
+                                  <span className={`type-dot ${tx.type}`}></span>
+                                  {tx.description}
+                                </span>
+                                <span className="dim fs-10">{tx.categoryName || 'Sem Categoria'}</span>
+                              </div>
                             </td>
-                            <td className={tx.type === 'income' ? 'text-green' : 'text-red'}>
+                            <td className={tx.type === 'income' ? 'text-green fw-600' : 'text-red fw-600'}>
                               {tx.type === 'income' ? '+' : '-'} R$ {tx.amount.toFixed(2)}
                             </td>
-                            <td>{tx.installments > 1 ? `${tx.installmentIndex}/${tx.installments}` : '1/1'}</td>
+                            <td>
+                               <span className="badge-small">{tx.installments > 1 ? `${tx.installmentIndex}/${tx.installments}` : '1/1'}</span>
+                            </td>
+                            <td style={{ textAlign: 'right' }}>
+                              <div className="flex justify-end gap-8">
+                                <button 
+                                  className="icon-btn-sm blue" 
+                                  onClick={() => handleEditTransaction(tx)}
+                                  title="Editar"
+                                >
+                                  <Edit2 size={12} />
+                                </button>
+                                <button 
+                                  className="icon-btn-sm red" 
+                                  onClick={() => handleDeleteClick(tx)}
+                                  title="Excluir"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>

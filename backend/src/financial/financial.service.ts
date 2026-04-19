@@ -215,4 +215,68 @@ export class FinancialService {
 
     return finalProjection;
   }
+
+  async deleteExpense(id: string, allInstallments: boolean = false) {
+    const expense = await this.expenseModel.findById(id).exec();
+    if (!expense) throw new Error('Expense not found');
+
+    if (allInstallments && expense.description.includes('(')) {
+      const baseDesc = expense.description.split(' (')[0];
+      return this.expenseModel.deleteMany({
+        userPhone: expense.userPhone,
+        description: { $regex: new RegExp('^' + baseDesc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) }
+      }).exec();
+    }
+    return this.expenseModel.findByIdAndDelete(id).exec();
+  }
+
+  async updateExpense(id: string, update: any, allInstallments: boolean = false) {
+    const expense = await this.expenseModel.findById(id).exec();
+    if (!expense) throw new Error('Expense not found');
+
+    if (allInstallments && expense.description.includes('(')) {
+      const baseDesc = expense.description.split(' (')[0];
+      const { date, ...otherUpdates } = update;
+      return this.expenseModel.updateMany(
+        {
+          userPhone: expense.userPhone,
+          description: { $regex: new RegExp('^' + baseDesc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) }
+        },
+        { $set: otherUpdates }
+      ).exec();
+    }
+    return this.expenseModel.findByIdAndUpdate(id, update, { new: true }).exec();
+  }
+
+  async deleteIncome(id: string, allInstallments: boolean = false) {
+    const income = await this.incomeModel.findById(id).exec();
+    if (!income) throw new Error('Income not found');
+
+    if (allInstallments && income.description.includes('(')) {
+      const baseDesc = income.description.split(' (')[0];
+      return this.incomeModel.deleteMany({
+        userPhone: income.userPhone,
+        description: { $regex: new RegExp('^' + baseDesc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) }
+      }).exec();
+    }
+    return this.incomeModel.findByIdAndDelete(id).exec();
+  }
+
+  async updateIncome(id: string, update: any, allInstallments: boolean = false) {
+    const income = await this.incomeModel.findById(id).exec();
+    if (!income) throw new Error('Income not found');
+
+    if (allInstallments && income.description.includes('(')) {
+      const baseDesc = income.description.split(' (')[0];
+      const { date, ...otherUpdates } = update;
+      return this.incomeModel.updateMany(
+        {
+          userPhone: income.userPhone,
+          description: { $regex: new RegExp('^' + baseDesc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) }
+        },
+        { $set: otherUpdates }
+      ).exec();
+    }
+    return this.incomeModel.findByIdAndUpdate(id, update, { new: true }).exec();
+  }
 }

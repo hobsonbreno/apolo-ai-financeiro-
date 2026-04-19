@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Res, Patch, Delete, Param } from '@nestjs/common';
 import type { Response } from 'express';
 import * as QRCode from 'qrcode';
 import { FinancialService } from './financial.service';
@@ -97,5 +97,43 @@ export class FinancialController {
   @Get('wa-status')
   async getWaStatus() {
     return { connected: this.financialService.getConnected() };
+  }
+
+  @Patch('expenses/:id')
+  @ApiOperation({ summary: 'Atualizar uma despesa (opção de todas as parcelas)' })
+  async updateExpense(
+    @Param('id') id: string,
+    @Body() data: any,
+    @Query('allInstallments') allInstallments: string
+  ) {
+    return this.financialService.updateExpense(id, data, allInstallments === 'true');
+  }
+
+  @Delete('expenses/:id')
+  @ApiOperation({ summary: 'Excluir uma despesa (opção de todas as parcelas)' })
+  async deleteExpense(
+    @Param('id') id: string,
+    @Query('allInstallments') allInstallments: string
+  ) {
+    return this.financialService.deleteExpense(id, allInstallments === 'true');
+  }
+
+  @Patch('income/:id')
+  @ApiOperation({ summary: 'Atualizar uma receita' })
+  async updateIncome(
+    @Param('id') id: string,
+    @Body() data: any,
+    @Query('allInstallments') allInstallments: string
+  ) {
+    return this.financialService.updateIncome(id, data, allInstallments === 'true');
+  }
+
+  @Delete('income/:id')
+  @ApiOperation({ summary: 'Excluir uma receita' })
+  async deleteIncome(
+    @Param('id') id: string,
+    @Query('allInstallments') allInstallments: string
+  ) {
+    return this.financialService.deleteIncome(id, allInstallments === 'true');
   }
 }
