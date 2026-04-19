@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: whatsapp-agent
-        image: ghcr.io/hobsonbreno/apolo-ai-financeiro--whatsapp-agent:2e2376e
+        image: ghcr.io/hobsonbreno/apolo-ai-financeiro--whatsapp-agent:61dea55
         env:
         - name: API_URL
           value: "http://api:3000/financial"
