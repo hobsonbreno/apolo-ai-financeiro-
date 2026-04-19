@@ -3,7 +3,7 @@ import {
   PieChart, Pie, Cell, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { Wallet, TrendingUp, TrendingDown, AlertCircle, PlusCircle, Settings, Activity, Trash2, Edit2, Info } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, AlertCircle, PlusCircle, Settings, Activity, Trash2, Edit2 } from 'lucide-react';
 import axios from 'axios';
 import AdminPanel from './AdminPanel';
 import Login from './Login';
@@ -68,7 +68,7 @@ function App() {
     try {
       const endpoint = selectedTx.type === 'income' ? 'income' : 'expenses';
       await axios.delete(`${API_BASE}/${endpoint}/${selectedTx._id}?allInstallments=${allInstallments}`);
-      fetchSummary();
+      fetchData();
       setShowDeleteConfirm(false);
       setSelectedTx(null);
     } catch (error) {
