@@ -2,8 +2,12 @@ import { Client, LocalAuth, Message, MessageTypes } from 'whatsapp-web.js';
 import qrcode from 'qrcode-terminal';
 import axios from 'axios';
 import dotenv from 'dotenv';
+import express from 'express';
 
 dotenv.config();
+
+const app = express();
+app.use(express.json());
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -18,6 +22,30 @@ const client = new Client({
             '--single-process'
         ]
     }
+});
+
+// Endpoint para o Backend enviar mensagens instantâneas
+app.post('/send-message', async (req, res) => {
+    const { phone, message } = req.body;
+    if (!phone || !message) {
+        return res.status(400).json({ error: 'Phone and message are required' });
+    }
+
+    try {
+        // Formata o número para o padrão do WhatsApp Web (ex: 5585981251400@c.us)
+        const formattedPhone = phone.includes('@c.us') ? phone : `${phone.replace('+', '')}@c.us`;
+        await client.sendMessage(formattedPhone, message);
+        console.log(`✅ Mensagem enviada via API para ${formattedPhone}`);
+        res.json({ success: true });
+    } catch (err: any) {
+        console.error('❌ Erro ao enviar mensagem via API:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+    console.log(`🌐 Servidor de comandos do WhatsApp rodando na porta ${PORT}`);
 });
 
 const API_URL = process.env.API_URL || 'http://api:3000/financial';
