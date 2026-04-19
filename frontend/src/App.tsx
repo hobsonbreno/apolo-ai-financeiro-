@@ -1,9 +1,9 @@
-import { 
+import React, { useState, useEffect } from 'react';
+import {
   PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid
 } from 'recharts';
 import { Wallet, TrendingUp, TrendingDown, AlertCircle, PlusCircle, Settings, Activity } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import axios from 'axios';
 import AdminPanel from './AdminPanel';
 import Login from './Login';
@@ -25,7 +25,7 @@ function App() {
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'expense' | 'income'>('expense');
-  const [formData, setFormData] = useState({ description: '', amount: '', installments: '1', date: new Date().toISOString().split('T')[0] });
+  const [formData, setFormData] = useState({ description: '', amount: '', installments: '1', date: new Date().toISOString().split('T')[0], categoryName: 'Alimentação' });
   const [showQRModal, setShowQRModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -46,7 +46,7 @@ function App() {
 
   const handleUpdateProfile = async (data: any) => {
     try {
-      const response = await axios.patch(`/api/auth/profile/${user._id || user.id}`, 
+      const response = await axios.patch(`/api/auth/profile/${user._id || user.id}`,
         data,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -66,13 +66,13 @@ function App() {
       try {
         const res = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
         if (!res.data.erro) {
-           // Atualiza campos de endereço no formulário (via DOM ou estado se preferir)
-           const addrInput = document.getElementsByName('address')[0] as HTMLInputElement;
-           const cityInput = document.getElementsByName('city')[0] as HTMLInputElement;
-           const stateInput = document.getElementsByName('state')[0] as HTMLInputElement;
-           if (addrInput) addrInput.value = res.data.logradouro;
-           if (cityInput) cityInput.value = res.data.localidade;
-           if (stateInput) stateInput.value = res.data.uf;
+          // Atualiza campos de endereço no formulário (via DOM ou estado se preferir)
+          const addrInput = document.getElementsByName('address')[0] as HTMLInputElement;
+          const cityInput = document.getElementsByName('city')[0] as HTMLInputElement;
+          const stateInput = document.getElementsByName('state')[0] as HTMLInputElement;
+          if (addrInput) addrInput.value = res.data.logradouro;
+          if (cityInput) cityInput.value = res.data.localidade;
+          if (stateInput) stateInput.value = res.data.uf;
         }
       } catch (err) {
         console.error('CEP fail');
@@ -81,7 +81,7 @@ function App() {
   };
 
   const handleExport = () => {
-    const csvContent = "data:text/csv;charset=utf-8," 
+    const csvContent = "data:text/csv;charset=utf-8,"
       + "Data,Descricao,Valor,Tipo,Categoria\n"
       + allTransactions.map(tx => `${new Date(tx.date).toLocaleDateString()},${tx.description},${tx.amount},${tx.type},${tx.categoryName || ''}`).join("\n");
     const encodedUri = encodeURI(csvContent);
@@ -108,7 +108,7 @@ function App() {
                 phone,
                 description,
                 amount: parseFloat(amount),
-                date: new Date().toISOString(), // Ou converter 'date' se o formato bater
+                date: date ? new Date(date).toISOString() : new Date().toISOString(),
                 categoryName: category,
                 installments: 1
               }, { headers: { Authorization: `Bearer ${token}` } });
@@ -181,9 +181,9 @@ function App() {
         ...formData,
         amount: parseFloat(formData.amount) || 0,
         installments: parseInt(formData.installments) || 1,
-        phone: phone 
+        phone: phone
       };
-      
+
       await axios.post(`${API_BASE}/${endpoint}`, payload);
       setShowModal(false);
       setFormData({ description: '', amount: '', installments: '1', date: new Date().toISOString().split('T')[0], categoryName: 'Salário' });
@@ -206,8 +206,16 @@ function App() {
     return acc;
   }, []);
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0f172a', color: 'white' }}>
+        <p>Apolo está preparando seus dados...</p>
+      </div>
+    );
+  }
+
   if (!token) return <Login onLogin={handleLogin} />;
-  
+
   return (
     <div className="dashboard-layout">
       {/* MODAL PERFIL */}
@@ -224,12 +232,12 @@ function App() {
             <form className="flex flex-col gap-12" onSubmit={handleUpdateProfile}>
               <div className="input-field">
                 <label className="dim fs-12 mb-4 block">URL da Foto de Perfil</label>
-                <input 
-                  type="text" 
-                  value={profileUrl} 
+                <input
+                  type="text"
+                  value={profileUrl}
                   onChange={(e) => setProfileUrl(e.target.value)}
-                  className="w-full bg-slate p-8 rounded" 
-                  placeholder="https://..." 
+                  className="w-full bg-slate p-8 rounded"
+                  placeholder="https://..."
                 />
               </div>
               <div className="flex justify-end gap-12 mt-16">
@@ -277,7 +285,7 @@ function App() {
             <TrendingUp size={20} />
             <span>Simulador IA</span>
           </button>
-          
+
           {user?.role === 'admin' && (
             <button className={view === 'admin' ? 'active' : ''} onClick={() => setView('admin')}>
               <Activity size={20} />
@@ -322,51 +330,51 @@ function App() {
               <form onSubmit={handleModalSubmit}>
                 <div className="input-field mb-12">
                   <label className="dim fs-12 mb-4 block">Descrição</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     className="w-full bg-slate p-8 rounded"
-                    value={formData.description} 
-                    onChange={e => setFormData({...formData, description: e.target.value})} 
-                    required 
+                    value={formData.description}
+                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                    required
                   />
                 </div>
                 <div className="flex gap-12 mb-12">
                   <div className="input-field flex-1">
                     <label className="dim fs-12 mb-4 block">Valor (R$)</label>
-                    <input 
-                      type="number" 
-                      step="0.01" 
+                    <input
+                      type="number"
+                      step="0.01"
                       className="w-full bg-slate p-8 rounded"
-                      value={formData.amount} 
-                      onChange={e => setFormData({...formData, amount: e.target.value})} 
-                      required 
+                      value={formData.amount}
+                      onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                      required
                     />
                   </div>
                   <div className="input-field flex-1">
                     <label className="dim fs-12 mb-4 block">Parcelas / Repetições</label>
-                    <input 
-                      type="number" 
-                      min="1" 
+                    <input
+                      type="number"
+                      min="1"
                       className="w-full bg-slate p-8 rounded"
-                      value={formData.installments} 
-                      onChange={e => setFormData({...formData, installments: e.target.value})} 
+                      value={formData.installments}
+                      onChange={e => setFormData({ ...formData, installments: e.target.value })}
                     />
                   </div>
                 </div>
                 <div className="flex gap-12 mb-12">
                   <div className="input-field flex-1">
                     <label className="dim fs-12 mb-4 block">Categoria</label>
-                    <select 
+                    <select
                       className="w-full bg-slate p-8 rounded"
                       style={{ color: 'white' }}
                       value={isCustomCategory ? 'Outros' : ((formData as any).categoryName || (modalType === 'income' ? 'Salário' : 'Alimentação'))}
                       onChange={e => {
                         if (e.target.value === 'Outros') {
                           setIsCustomCategory(true);
-                          setFormData({...formData, categoryName: ''} as any);
+                          setFormData({ ...formData, categoryName: '' } as any);
                         } else {
                           setIsCustomCategory(false);
-                          setFormData({...formData, categoryName: e.target.value} as any);
+                          setFormData({ ...formData, categoryName: e.target.value } as any);
                         }
                       }}
                     >
@@ -394,24 +402,24 @@ function App() {
                 {isCustomCategory && (
                   <div className="input-field mb-12 anim-slide-up">
                     <label className="dim fs-12 mb-4 block">Nome da Nova Categoria</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       className="w-full bg-slate p-8 rounded"
                       placeholder="Ex: Presentes, Academia, etc."
                       value={(formData as any).categoryName}
-                      onChange={e => setFormData({...formData, categoryName: e.target.value} as any)}
-                      required 
+                      onChange={e => setFormData({ ...formData, categoryName: e.target.value } as any)}
+                      required
                     />
                   </div>
                 )}
                 <div className="input-field mb-16">
-                   <label className="dim fs-12 mb-4 block">Data</label>
-                   <input 
-                      type="date" 
-                      className="w-full bg-slate p-8 rounded"
-                      value={formData.date} 
-                      onChange={e => setFormData({...formData, date: e.target.value})} 
-                   />
+                  <label className="dim fs-12 mb-4 block">Data</label>
+                  <input
+                    type="date"
+                    className="w-full bg-slate p-8 rounded"
+                    value={formData.date}
+                    onChange={e => setFormData({ ...formData, date: e.target.value })}
+                  />
                 </div>
                 <div className="flex justify-end gap-12 mt-20">
                   <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>
@@ -476,11 +484,11 @@ function App() {
                           dataKey="value"
                           stroke="none"
                         >
-                          {categoryData.map((entry: any, index: number) => (
+                          {categoryData.map((_: any, index: number) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip 
+                        <Tooltip
                           contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '12px', color: '#fff' }}
                         />
                       </PieChart>
@@ -502,11 +510,11 @@ function App() {
                       </button>
                       <div className="v-divider"></div>
                       <button className="btn-secondary btn-sm" onClick={handleExport} title="Exportar CSV">
-                         <Activity size={14} /> Exportar
+                        <Activity size={14} /> Exportar
                       </button>
                       <label className="btn-secondary btn-sm cursor-pointer" title="Importar CSV">
-                         <TrendingUp size={14} /> Importar
-                         <input type="file" accept=".csv" onChange={handleImport} hidden />
+                        <TrendingUp size={14} /> Importar
+                        <input type="file" accept=".csv" onChange={handleImport} hidden />
                       </label>
                     </div>
                   </div>
@@ -545,198 +553,198 @@ function App() {
             </div>
 
             <div className="main-grid full-width-grid">
-               <section className="card glass-premium projection-card">
-                  <div className="card-header">
-                    <h2>📈 Projeção de Fluxo de Caixa (Anual)</h2>
-                    <p className="dim">Clique em uma barra para ver o detalhamento do mês</p>
-                  </div>
+              <section className="card glass-premium projection-card">
+                <div className="card-header">
+                  <h2>📈 Projeção de Fluxo de Caixa (Anual)</h2>
+                  <p className="dim">Clique em uma barra para ver o detalhamento do mês</p>
+                </div>
 
-                  {selectedMonth !== null && projection[selectedMonth] && (
-                    <div className="calc-summary anim-fade-in" style={{ margin: '0 20px 20px' }}>
-                      <div className="calc-item">
-                        <span className="calc-label">Entradas</span>
-                        <span className="calc-value text-green">R$ {projection[selectedMonth].income.toLocaleString('pt-BR')}</span>
+                {selectedMonth !== null && projection[selectedMonth] && (
+                  <div className="calc-summary anim-fade-in" style={{ margin: '0 20px 20px' }}>
+                    <div className="calc-item">
+                      <span className="calc-label">Entradas</span>
+                      <span className="calc-value text-green">R$ {projection[selectedMonth].income.toLocaleString('pt-BR')}</span>
+                    </div>
+                    <div className="dim" style={{ alignSelf: 'center' }}>−</div>
+                    <div className="calc-item">
+                      <span className="calc-label">Despesas</span>
+                      <span className="calc-value text-red">R$ {projection[selectedMonth].expenses.toLocaleString('pt-BR')}</span>
+                    </div>
+                    <div className="dim" style={{ alignSelf: 'center' }}>=</div>
+                    <div className="calc-item">
+                      <span className="calc-label">Projeção Mensal</span>
+                      <span className="calc-value highlight">R$ {(projection[selectedMonth].income - projection[selectedMonth].expenses).toLocaleString('pt-BR')}</span>
+                    </div>
+                    <div className="dim" style={{ alignSelf: 'center' }}>➔</div>
+                    <div className="calc-item">
+                      <span className="calc-label">Saldo Acumulado</span>
+                      <span className="calc-value" style={{ color: '#6366f1' }}>R$ {projection[selectedMonth].cumulative.toLocaleString('pt-BR')}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="chart-wrapper">
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart
+                      data={projection}
+                      onClick={(data) => data && setSelectedMonth(data.activeTooltipIndex)}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                      <XAxis dataKey="month" stroke="#94a3b8" />
+                      <YAxis stroke="#94a3b8" />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '12px', color: '#fff' }}
+                      />
+                      <Legend />
+                      <Bar dataKey="income" name="Entradas" fill="#10b981" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="expenses" name="Saídas" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="cumulative" name="Acumulado" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {selectedMonth !== null && projection[selectedMonth] && (
+                  <div className="projection-details mt-24 anim-fade-in">
+                    <h3 className="mb-12">Detalhamento: <span className="gradient-text">{projection[selectedMonth].month}</span></h3>
+                    <div className="details-grid">
+                      <div className="details-col">
+                        <h4 className="text-green mb-8">Entradas</h4>
+                        {projection[selectedMonth].details.filter((d: any) => d.type === 'income').map((d: any, i: number) => (
+                          <div key={i} className="detail-item">
+                            <span>{d.name}</span>
+                            <span className="text-green">+ R$ {d.amount.toFixed(2)}</span>
+                          </div>
+                        ))}
                       </div>
-                      <div className="dim" style={{ alignSelf: 'center' }}>−</div>
-                      <div className="calc-item">
-                        <span className="calc-label">Despesas</span>
-                        <span className="calc-value text-red">R$ {projection[selectedMonth].expenses.toLocaleString('pt-BR')}</span>
-                      </div>
-                      <div className="dim" style={{ alignSelf: 'center' }}>=</div>
-                      <div className="calc-item">
-                        <span className="calc-label">Projeção Mensal</span>
-                        <span className="calc-value highlight">R$ {(projection[selectedMonth].income - projection[selectedMonth].expenses).toLocaleString('pt-BR')}</span>
-                      </div>
-                      <div className="dim" style={{ alignSelf: 'center' }}>➔</div>
-                      <div className="calc-item">
-                        <span className="calc-label">Saldo Acumulado</span>
-                        <span className="calc-value" style={{ color: '#6366f1' }}>R$ {projection[selectedMonth].cumulative.toLocaleString('pt-BR')}</span>
+                      <div className="details-col">
+                        <h4 className="text-red mb-8">Saídas (Parcelados/Fixos)</h4>
+                        {projection[selectedMonth].details.filter((d: any) => d.type === 'expense').map((d: any, i: number) => (
+                          <div key={i} className="detail-item">
+                            <span>{d.name}</span>
+                            <span className="text-red">- R$ {d.amount.toFixed(2)}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  )}
-
-                  <div className="chart-wrapper">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart 
-                        data={projection}
-                        onClick={(data) => data && setSelectedMonth(data.activeTooltipIndex)}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                        <XAxis dataKey="month" stroke="#94a3b8" />
-                        <YAxis stroke="#94a3b8" />
-                        <Tooltip 
-                           contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '12px', color: '#fff' }}
-                        />
-                        <Legend />
-                        <Bar dataKey="income" name="Entradas" fill="#10b981" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="expenses" name="Saídas" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="cumulative" name="Acumulado" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
                   </div>
-
-                  {selectedMonth !== null && projection[selectedMonth] && (
-                    <div className="projection-details mt-24 anim-fade-in">
-                      <h3 className="mb-12">Detalhamento: <span className="gradient-text">{projection[selectedMonth].month}</span></h3>
-                      <div className="details-grid">
-                        <div className="details-col">
-                          <h4 className="text-green mb-8">Entradas</h4>
-                          {projection[selectedMonth].details.filter((d: any) => d.type === 'income').map((d: any, i: number) => (
-                            <div key={i} className="detail-item">
-                              <span>{d.name}</span>
-                              <span className="text-green">+ R$ {d.amount.toFixed(2)}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="details-col">
-                          <h4 className="text-red mb-8">Saídas (Parcelados/Fixos)</h4>
-                          {projection[selectedMonth].details.filter((d: any) => d.type === 'expense').map((d: any, i: number) => (
-                            <div key={i} className="detail-item">
-                              <span>{d.name}</span>
-                              <span className="text-red">- R$ {d.amount.toFixed(2)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-               </section>
+                )}
+              </section>
             </div>
           </div>
         ) : view === 'profile' ? (
           <div className="dashboard-content anim-fade-in">
-             <div className="welcome-section">
-                <h1>Atualização de <span className="gradient-text">Cadastro</span></h1>
-                <p>Mantenha seus dados seguros e atualizados.</p>
-             </div>
-             
-             <div className="profile-grid-custom anim-slide-up">
-               {/* CARD 1: DADOS PESSOAIS */}
-               <div className="card glass-premium">
-                  <div className="card-header border-b">
-                     <h2 className="fs-16"><Wallet size={18} className="text-blue mr-8" /> Dados Pessoais</h2>
-                  </div>
-                  <form onSubmit={(e) => {
-                    e.preventDefault();
-                    const fd = new FormData(e.currentTarget);
-                    handleUpdateProfile(Object.fromEntries(fd.entries()));
-                  }} className="flex flex-col gap-16 p-24">
-                     <div className="input-field">
-                        <label className="dim fs-11 mb-4 block uppercase fw-600">Nome Completo</label>
-                        <input type="text" name="name" className="w-full bg-slate p-12 rounded border-slate-light focus-blue" defaultValue={user?.name} required />
-                     </div>
-                     <div className="input-field">
-                        <label className="dim fs-11 mb-4 block uppercase fw-600">Email de Contato</label>
-                        <input type="email" name="email" className="w-full bg-slate p-12 rounded border-slate-light focus-blue" defaultValue={user?.email} required />
-                     </div>
-                     <div className="flex gap-16">
-                        <div className="input-field flex-1">
-                          <label className="dim fs-11 mb-4 block uppercase fw-600">CPF</label>
-                          <input type="text" name="cpf" className="w-full bg-slate p-12 rounded border-slate-light focus-blue" defaultValue={user?.cpf} required />
-                        </div>
-                        <div className="input-field flex-1">
-                          <label className="dim fs-11 mb-4 block uppercase fw-600">WhatsApp</label>
-                          <input type="text" name="phone" className="w-full bg-slate p-12 rounded border-slate-light focus-blue" defaultValue={user?.phone} required />
-                        </div>
-                     </div>
-                     <button type="submit" className="btn-primary py-12 mt-8">Salvar Dados Pessoais</button>
-                  </form>
-               </div>
+            <div className="welcome-section">
+              <h1>Atualização de <span className="gradient-text">Cadastro</span></h1>
+              <p>Mantenha seus dados seguros e atualizados.</p>
+            </div>
 
-               {/* CARD 2: ENDEREÇO */}
-               <div className="card glass-premium">
-                  <div className="card-header border-b">
-                     <h2 className="fs-16"><Activity size={18} className="text-green mr-8" /> Endereço Residencial</h2>
+            <div className="profile-grid-custom anim-slide-up">
+              {/* CARD 1: DADOS PESSOAIS */}
+              <div className="card glass-premium">
+                <div className="card-header border-b">
+                  <h2 className="fs-16"><Wallet size={18} className="text-blue mr-8" /> Dados Pessoais</h2>
+                </div>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.currentTarget);
+                  handleUpdateProfile(Object.fromEntries(fd.entries()));
+                }} className="flex flex-col gap-16 p-24">
+                  <div className="input-field">
+                    <label className="dim fs-11 mb-4 block uppercase fw-600">Nome Completo</label>
+                    <input type="text" name="name" className="w-full bg-slate p-12 rounded border-slate-light focus-blue" defaultValue={user?.name} required />
                   </div>
-                  <form onSubmit={(e) => {
-                    e.preventDefault();
-                    const fd = new FormData(e.currentTarget);
-                    handleUpdateProfile(Object.fromEntries(fd.entries()));
-                  }} className="flex flex-col gap-16 p-24">
-                     <div className="input-field">
-                        <label className="dim fs-11 mb-4 block uppercase fw-600">CEP (Auto-preenchimento)</label>
-                        <input type="text" name="cep" className="w-full bg-slate p-12 rounded border-slate-light focus-green" defaultValue={user?.cep} maxLength={8} onChange={e => handleCEP(e.target.value)} placeholder="00000000" />
-                     </div>
-                     <div className="flex gap-16">
-                        <div className="input-field flex-3">
-                          <label className="dim fs-11 mb-4 block uppercase fw-600">Logradouro / Rua</label>
-                          <input type="text" name="address" className="w-full bg-slate p-12 rounded border-slate-light" defaultValue={user?.address} />
-                        </div>
-                        <div className="input-field flex-1">
-                          <label className="dim fs-11 mb-4 block uppercase fw-600">Número</label>
-                          <input type="text" name="addressNumber" className="w-full bg-slate p-12 rounded border-slate-light" defaultValue={user?.addressNumber} />
-                        </div>
-                     </div>
-                     <div className="flex gap-16">
-                        <div className="input-field flex-2">
-                          <label className="dim fs-11 mb-4 block uppercase fw-600">Cidade</label>
-                          <input type="text" name="city" className="w-full bg-slate p-12 rounded border-slate-light" defaultValue={user?.city} />
-                        </div>
-                        <div className="input-field flex-1">
-                          <label className="dim fs-11 mb-4 block uppercase fw-600">Estado (UF)</label>
-                          <input type="text" name="state" className="w-full bg-slate p-12 rounded border-slate-light" defaultValue={user?.state} maxLength={2} />
-                        </div>
-                     </div>
-                     <button type="submit" className="btn-primary py-12 mt-8 bg-green">Atualizar Localização</button>
-                  </form>
-               </div>
+                  <div className="input-field">
+                    <label className="dim fs-11 mb-4 block uppercase fw-600">Email de Contato</label>
+                    <input type="email" name="email" className="w-full bg-slate p-12 rounded border-slate-light focus-blue" defaultValue={user?.email} required />
+                  </div>
+                  <div className="flex gap-16">
+                    <div className="input-field flex-1">
+                      <label className="dim fs-11 mb-4 block uppercase fw-600">CPF</label>
+                      <input type="text" name="cpf" className="w-full bg-slate p-12 rounded border-slate-light focus-blue" defaultValue={user?.cpf} required />
+                    </div>
+                    <div className="input-field flex-1">
+                      <label className="dim fs-11 mb-4 block uppercase fw-600">WhatsApp</label>
+                      <input type="text" name="phone" className="w-full bg-slate p-12 rounded border-slate-light focus-blue" defaultValue={user?.phone} required />
+                    </div>
+                  </div>
+                  <button type="submit" className="btn-primary py-12 mt-8">Salvar Dados Pessoais</button>
+                </form>
+              </div>
 
-               {/* CARD 3: SEGURANÇA */}
-               <div className="card glass-premium">
-                  <div className="card-header border-b text-red">
-                     <h2 className="fs-16"><Settings size={18} className="mr-8" /> Segurança da Conta</h2>
+              {/* CARD 2: ENDEREÇO */}
+              <div className="card glass-premium">
+                <div className="card-header border-b">
+                  <h2 className="fs-16"><Activity size={18} className="text-green mr-8" /> Endereço Residencial</h2>
+                </div>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.currentTarget);
+                  handleUpdateProfile(Object.fromEntries(fd.entries()));
+                }} className="flex flex-col gap-16 p-24">
+                  <div className="input-field">
+                    <label className="dim fs-11 mb-4 block uppercase fw-600">CEP (Auto-preenchimento)</label>
+                    <input type="text" name="cep" className="w-full bg-slate p-12 rounded border-slate-light focus-green" defaultValue={user?.cep} maxLength={8} onChange={e => handleCEP(e.target.value)} placeholder="00000000" />
                   </div>
-                  <form onSubmit={(e) => {
-                    e.preventDefault();
-                    const fd = new FormData(e.currentTarget);
-                    const data = Object.fromEntries(fd.entries());
-                    if (data.newPass) {
-                      const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{1,8}$/;
-                      if (!regex.test(data.newPass as string)) {
-                        alert('A senha deve conter Maiúsculas, Minúsculas, Caracteres Especiais e no máximo 8 caracteres.');
-                        return;
-                      }
-                      handleUpdateProfile({ password: data.newPass });
+                  <div className="flex gap-16">
+                    <div className="input-field flex-3">
+                      <label className="dim fs-11 mb-4 block uppercase fw-600">Logradouro / Rua</label>
+                      <input type="text" name="address" className="w-full bg-slate p-12 rounded border-slate-light" defaultValue={user?.address} />
+                    </div>
+                    <div className="input-field flex-1">
+                      <label className="dim fs-11 mb-4 block uppercase fw-600">Número</label>
+                      <input type="text" name="addressNumber" className="w-full bg-slate p-12 rounded border-slate-light" defaultValue={user?.addressNumber} />
+                    </div>
+                  </div>
+                  <div className="flex gap-16">
+                    <div className="input-field flex-2">
+                      <label className="dim fs-11 mb-4 block uppercase fw-600">Cidade</label>
+                      <input type="text" name="city" className="w-full bg-slate p-12 rounded border-slate-light" defaultValue={user?.city} />
+                    </div>
+                    <div className="input-field flex-1">
+                      <label className="dim fs-11 mb-4 block uppercase fw-600">Estado (UF)</label>
+                      <input type="text" name="state" className="w-full bg-slate p-12 rounded border-slate-light" defaultValue={user?.state} maxLength={2} />
+                    </div>
+                  </div>
+                  <button type="submit" className="btn-primary py-12 mt-8 bg-green">Atualizar Localização</button>
+                </form>
+              </div>
+
+              {/* CARD 3: SEGURANÇA */}
+              <div className="card glass-premium">
+                <div className="card-header border-b text-red">
+                  <h2 className="fs-16"><Settings size={18} className="mr-8" /> Segurança da Conta</h2>
+                </div>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.currentTarget);
+                  const data = Object.fromEntries(fd.entries());
+                  if (data.newPass) {
+                    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{1,8}$/;
+                    if (!regex.test(data.newPass as string)) {
+                      alert('A senha deve conter Maiúsculas, Minúsculas, Caracteres Especiais e no máximo 8 caracteres.');
+                      return;
                     }
-                  }} className="flex flex-col gap-16 p-24">
-                     <div className="input-field">
-                        <label className="dim fs-11 mb-4 block uppercase fw-600">Nova Senha</label>
-                        <input type="password" name="newPass" className="w-full bg-slate p-12 rounded border-slate-light focus-red" maxLength={8} placeholder="••••••••" />
-                        <p className="fs-10 dim mt-8 italic">Use letras (A/a) e símbolos (!@#).</p>
-                     </div>
-                     <button type="submit" className="btn-primary py-12 mt-8 bg-red">Alterar Senha de Acesso</button>
-                  </form>
-               </div>
-             </div>
+                    handleUpdateProfile({ password: data.newPass });
+                  }
+                }} className="flex flex-col gap-16 p-24">
+                  <div className="input-field">
+                    <label className="dim fs-11 mb-4 block uppercase fw-600">Nova Senha</label>
+                    <input type="password" name="newPass" className="w-full bg-slate p-12 rounded border-slate-light focus-red" maxLength={8} placeholder="••••••••" />
+                    <p className="fs-10 dim mt-8 italic">Use letras (A/a) e símbolos (!@#).</p>
+                  </div>
+                  <button type="submit" className="btn-primary py-12 mt-8 bg-red">Alterar Senha de Acesso</button>
+                </form>
+              </div>
+            </div>
           </div>
         ) : view === 'simulator' ? (
           <div className="dashboard-content anim-fade-in">
-             <div className="welcome-section">
-                <h1>Simulador de <span className="gradient-text">Investimentos</span></h1>
-                <p>Baseado nos dados do Banco Central e seu saldo atual de R$ {summary.balance.toLocaleString('pt-BR')}</p>
-             </div>
-             
-             <InvestmentSimulator balance={summary.balance} />
+            <div className="welcome-section">
+              <h1>Simulador de <span className="gradient-text">Investimentos</span></h1>
+              <p>Baseado nos dados do Banco Central e seu saldo atual de R$ {summary.balance.toLocaleString('pt-BR')}</p>
+            </div>
+
+            <InvestmentSimulator balance={summary.balance} />
           </div>
         ) : (
           <AdminPanel />

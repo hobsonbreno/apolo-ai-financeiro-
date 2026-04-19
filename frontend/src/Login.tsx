@@ -26,11 +26,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     
     try {
       if (isRegister) {
-        // Validação de senha: Maiúscula, Minúscula, Especial, Máx 8
+        // Validação de senha: Maiúscula, Minúscula, Especial, Mín 6
         const hasUpper = /[A-Z]/.test(regData.password);
         const hasLower = /[a-z]/.test(regData.password);
         const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(regData.password);
-        const isCorrectLength = regData.password.length <= 8;
+        const isCorrectLength = regData.password.length >= 6;
 
         if (!hasUpper || !hasLower || !hasSpecial) {
           setError('A senha deve conter Letras Maiúsculas, Minúsculas e Caracteres Especiais.');
@@ -38,20 +38,20 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           return;
         }
         if (!isCorrectLength) {
-          setError('A senha não deve ultrapassar 8 caracteres.');
+          setError('A senha deve ter no mínimo 6 caracteres.');
           setLoading(false);
           return;
         }
 
-        await axios.post('http://localhost:3005/api/auth/register-full', regData);
+        await axios.post('/api/auth/register-full', regData);
         
-        const loginRes = await axios.post('http://localhost:3005/api/auth/login', {
+        const loginRes = await axios.post('/api/auth/login', {
           identifier: regData.email,
           password: regData.password
         });
         onLogin(loginRes.data.user, loginRes.data.token);
       } else {
-        const response = await axios.post('http://localhost:3005/api/auth/login', {
+        const response = await axios.post('/api/auth/login', {
           identifier,
           password
         });
@@ -69,7 +69,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setLoading(true);
     setError('');
     try {
-      await axios.post('http://localhost:3005/api/auth/request-recovery', { identifier });
+      await axios.post('/api/auth/request-recovery', { identifier });
       setRecoveryStep(2);
       setSuccessMsg('Token solicitado! Verifique seu console/backend (Simulado).');
     } catch (err: any) {
@@ -84,7 +84,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setLoading(true);
     setError('');
     try {
-      await axios.post('http://localhost:3005/api/auth/reset-password', { token: recoveryToken, newPass: newPassword });
+      await axios.post('/api/auth/reset-password', { token: recoveryToken, newPass: newPassword });
       setSuccessMsg('Senha alterada! Faça login agora.');
       setIsRecovery(false);
       setRecoveryStep(1);
@@ -146,8 +146,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <input type="text" value={regData.phone} onChange={e => setRegData({...regData, phone: e.target.value})} required />
               </div>
               <div className="input-group">
-                <label>Senha (Máx 8, A-z, @)</label>
-                <input type="password" maxLength={8} value={regData.password} onChange={e => setRegData({...regData, password: e.target.value})} required />
+                <label>Senha (Mín 6, A-z, @)</label>
+                <input type="password" value={regData.password} onChange={e => setRegData({...regData, password: e.target.value})} required />
               </div>
               <div className="input-group">
                 <label>Chave Admin (Opcional)</label>
@@ -172,7 +172,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                      Esqueceu a senha?
                    </button>
                 </div>
-                <input type="password" maxLength={8} value={password} onChange={e => setPassword(e.target.value)} required />
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
               </div>
             </>
           )}
@@ -205,7 +205,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       />
                       <input 
                         type="password" 
-                        placeholder="Nova senha (máx 8 carac.)" 
+                        placeholder="Nova senha (mín 6 carac.)" 
                         className="w-full" 
                         value={newPassword} 
                         onChange={e => setNewPassword(e.target.value)} 
