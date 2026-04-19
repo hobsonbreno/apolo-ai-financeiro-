@@ -21,6 +21,8 @@ spec:
           value: "http://api:3000/financial"
         - name: AI_URL
           value: "http://ai-engine:8000"
+        ports:
+        - containerPort: 3001
         volumeMounts:
         - name: wwebjs-auth
           mountPath: /app/.wwebjs_auth
@@ -35,3 +37,16 @@ spec:
         hostPath:
           path: /home/hobson007breno/data/apolo-whatsapp/cache
           type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: whatsapp-agent
+  namespace: apolo-financeiro
+spec:
+  selector:
+    app: whatsapp-agent
+  ports:
+  - protocol: TCP
+    port: 3001
+    targetPort: 3001

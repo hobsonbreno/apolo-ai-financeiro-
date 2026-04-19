@@ -39,6 +39,18 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [profileUrl, setProfileUrl] = useState(user?.avatarUrl || '');
   const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const [qrVersion, setQrVersion] = useState(Date.now());
+
+  // Polling para atualizar o QR Code em tempo real quando o modal está aberto
+  useEffect(() => {
+    let interval: any;
+    if (showQRModal) {
+      interval = setInterval(() => {
+        setQrVersion(Date.now());
+      }, 5000);
+    }
+    return () => clearInterval(interval);
+  }, [showQRModal]);
 
   const phone = user?.phone || '5511999999999';
 
@@ -267,7 +279,7 @@ function App() {
             <h3 className="mb-16">Conectar ao WhatsApp</h3>
             <p className="dim mb-32">Aponte a câmera do seu WhatsApp para o código QR abaixo.</p>
             <div className="qr-container bg-white p-12 rounded inline-block mb-32">
-              <img src="/api/financial/qr" alt="QR" style={{ width: 220, height: 220 }} />
+              <img src={`/api/financial/qr?t=${qrVersion}`} alt="QR" style={{ width: 220, height: 220 }} />
             </div>
             <div className="flex justify-center">
               <button className="btn-primary" onClick={() => setShowQRModal(false)}>Concluir</button>

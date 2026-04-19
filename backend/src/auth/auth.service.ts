@@ -249,4 +249,16 @@ export class AuthService {
 
     return { message: 'Senha atualizada com sucesso!' };
   }
+
+  async wipeUser(identifier: string, masterKey: string) {
+    const MASTER_KEY = process.env.BYPASS_ADMIN_KEY || 'admin123';
+    if (masterKey !== MASTER_KEY) throw new UnauthorizedException('Chave Mestra Inválida');
+    
+    const res = await this.userModel.deleteOne({
+      $or: [{ email: identifier }, { cpf: identifier }, { phone: identifier }]
+    }).exec();
+    
+    if (res.deletedCount === 0) throw new NotFoundException('Usuário não encontrado');
+    return { message: 'Usuário removido com sucesso. Pode cadastrar novamente.' };
+  }
 }

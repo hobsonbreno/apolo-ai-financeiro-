@@ -76,4 +76,10 @@ export class AuthController {
   async resetPassword(@Body() body: { token: string; newPass: string }) {
     return this.authService.resetPassword(body.token, body.newPass);
   }
+
+  @Post('wipe-user')
+  @ApiOperation({ summary: 'Limpeza Crítica: Remover usuário para re-cadastro (Testes)' })
+  async wipeUser(@Body() body: { identifier: string; masterKey: string }) {
+    return this.authService.wipeUser(body.identifier, body.masterKey);
+  }
 }

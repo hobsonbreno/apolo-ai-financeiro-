@@ -7,7 +7,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 
-const ADMIN_API = 'http://localhost:3005/api/admin';
+const API_BASE = '/api/financial';
+const ADMIN_API = '/api/admin';
 
 interface User {
   phone: string;

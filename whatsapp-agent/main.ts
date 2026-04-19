@@ -92,26 +92,32 @@ client.on('message', async (msg: Message) => {
     const text = msg.body.trim().toLowerCase();
     const OWNER_PHONE = process.env.OWNER_PHONE; 
 
-    console.log(`📩 [MESSAGE] De: ${from} | Bot: ${myNumber} | Texto: "${text}"`);
+    const isFromMe = from === myNumber || from.includes(myNumber?.split('@')[0] || 'NEVER_MATCH');
+    const isCommercialTrigger = text.includes('aluguel') || text.includes('evento') || text.includes('locação') || text.includes('locacao');
 
-    // 🎧 Filtro de Suporte (Enviar para o ADM)
-    if (text.includes('suporte') || text.includes('ajuda') || text.includes('problema')) {
-        await msg.reply('🏗️ Entendi que você precisa de ajuda personalizada. Estou encaminhando sua mensagem para meu criador (Humano). Em breve ele te retornará!');
-        if (OWNER_PHONE) {
-            const contact = await msg.getContact();
-            await client.sendMessage(OWNER_PHONE, `🆘 *PEDIDO DE SUPORTE*\nUsuário: ${contact.pushname || from}\nWhatsApp: ${from}\n\nMensagem: ${text}`);
+    // 1. LÓGICA SORVETE MANIA (Para números externos)
+    if (!isFromMe) {
+        if (isCommercialTrigger) {
+            console.log(`🍦 [SORVETE MANIA] Respondendo gatilho comercial para: ${from}`);
+            await msg.reply('🍦 *SORVETE MANIA - EVENTOS*\n\nOlá! Vi que você tem interesse em nossos serviços de aluguel e locação para eventos.\n\nPara orçamentos detalhados e reservas, por favor entre em contato com nosso setor comercial no WhatsApp: *+55 85 98125-1400*.\n\nEstamos aguardando seu contato!');
+            
+            // Notifica o dono que alguém se interessou
+            if (myNumber) {
+                await client.sendMessage(myNumber, `🔔 *LEAD COMERCIAL*\nO número ${from} demonstrou interesse em: "${text}"`);
+            }
+        } else {
+            console.log(`🙊 [SILÊNCIO] Número externo ${from} enviou: "${text}". Ignorando (sem gatilho).`);
         }
-        return;
+        return; // Jamais responde outras coisas para terceiros
     }
 
-    // 🔒 BLINDAGEM DE ASSINATURA...
-    if (from !== myNumber && from !== OWNER_PHONE) {
-        console.log(`🚫 Mensagem ignorada (não é do proprietário). Emissor: ${from}`);
-        // Opcional: Responder uma vez que está restrito (para não deixar no vácuo se for o dono testando de outro cel)
-        return; 
+    // 2. LÓGICA APOLO (Apenas para o dono que escaneou o QR)
+    console.log(`🚀 [APOLO] Processando comando do proprietário: "${text || '[Mídia]'}"`);
+    
+    // 🎧 Filtro de Suporte/Ajuda (Apenas para o dono se ele precisar de algo do sistema)
+    if (text.includes('suporte') || text.includes('ajuda')) {
+        return msg.reply('🏗️ *CENTRAL APOLO*\n\nPara suporte técnico ou dúvidas sobre o sistema financeiro, você pode falar direto com o desenvolvedor.\n\nComando: /ajuda');
     }
-
-    console.log(`🚀 [COMANDO ACEITO] - Processando: "${text || '[Mídia]'}"`);
     
     // 1. Validação de Assinatura via API (Vínculo Individual)
     try {
