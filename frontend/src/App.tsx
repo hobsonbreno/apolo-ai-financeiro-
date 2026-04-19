@@ -144,7 +144,10 @@ function App() {
   }, []);
 
   const fetchData = async () => {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const [summaryRes, expensesRes, incomesRes, projectionRes] = await Promise.all([
