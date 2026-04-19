@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: ghcr.io/hobsonbreno/apolo-ai-financeiro--backend:3410033
+        image: ghcr.io/hobsonbreno/apolo-ai-financeiro--backend:dd4a682
         ports:
         - containerPort: 3000
         env:
