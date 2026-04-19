@@ -48,7 +48,7 @@ app.listen(PORT, () => {
     console.log(`🌐 Servidor de comandos do WhatsApp rodando na porta ${PORT}`);
 });
 
-const API_URL = process.env.API_URL || 'http://api:3000/financial';
+const API_URL = process.env.API_URL || 'http://api:3000/api/financial';
 
 client.on('qr', async (qr: string) => {
     qrcode.generate(qr, { small: true });
@@ -70,7 +70,7 @@ client.on('ready', async () => {
     setInterval(async () => {
         console.log('🔄 Executando rotina de manutenção diária...');
         try {
-            const ADMIN_API = 'http://api:3000/admin';
+            const ADMIN_API = 'http://api:3000/api/admin';
             const notificationsRes = await axios.get(`${ADMIN_API}/notifications`);
             const pending = notificationsRes.data;
 
