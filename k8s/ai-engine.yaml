@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: ai-engine
-        image: ghcr.io/hobsonbreno/apolo-ai-financeiro--ai-engine:61dea55
+        image: ghcr.io/hobsonbreno/apolo-ai-financeiro--ai-engine:d43568d
         ports:
         - containerPort: 8000
         env:
