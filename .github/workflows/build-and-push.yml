@@ -6,7 +6,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # O nome da imagem será baseado no repositório (ex: ghcr.io/hobsonbreno/apolo-ai-financeiro-backend)
 
 jobs:
   build-and-push:
@@ -31,6 +30,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Get Short SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -43,4 +46,35 @@ jobs:
         with:
           context: ./${{ matrix.component }}
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.image_suffix }}:latest
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.image_suffix }}:latest
+            ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.image_suffix }}:${{ steps.vars.outputs.sha_short }}
+
+  update-manifests:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get Short SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Update Kubernetes manifests
+        run: |
+          # Atualiza a tag da imagem em todos os arquivos YAML na pasta k8s
+          sed -i "s|image: ${{ env.REGISTRY }}/${{ github.repository }}-frontend:.*|image: ${{ env.REGISTRY }}/${{ github.repository }}-frontend:${{ steps.vars.outputs.sha_short }}|g" k8s/frontend.yaml
+          sed -i "s|image: ${{ env.REGISTRY }}/${{ github.repository }}-backend:.*|image: ${{ env.REGISTRY }}/${{ github.repository }}-backend:${{ steps.vars.outputs.sha_short }}|g" k8s/api.yaml
+          sed -i "s|image: ${{ env.REGISTRY }}/${{ github.repository }}-ai-engine:.*|image: ${{ env.REGISTRY }}/${{ github.repository }}-ai-engine:${{ steps.vars.outputs.sha_short }}|g" k8s/ai-engine.yaml
+          sed -i "s|image: ${{ env.REGISTRY }}/${{ github.repository }}-whatsapp-agent:.*|image: ${{ env.REGISTRY }}/${{ github.repository }}-whatsapp-agent:${{ steps.vars.outputs.sha_short }}|g" k8s/whatsapp-agent.yaml
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add k8s/*.yaml
+          git commit -m "chore: update image tags to ${{ steps.vars.outputs.sha_short }} [skip ci]" || echo "No changes to commit"
+          git push
